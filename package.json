@@ -16,7 +16,7 @@
     "clean": "rm -rf dist"
   },
   "bin": {
-    "doc": "./dist/index.js"
+    "babyagi": "./dist/index.js"
   },
   "prettier": {
     "printWidth": 80,
@@ -29,6 +29,7 @@
   "dependencies": {
     "@dqbd/tiktoken": "^1.0.2",
     "@types/istextorbinary": "^2.3.1",
+    "@types/shortid": "^0.0.29",
     "chalk": "^5.2.0",
     "cli-progress": "^3.12.0",
     "commander": "^10.0.0",
@@ -41,7 +42,9 @@
     "marked": "^4.3.0",
     "marked-terminal": "^5.1.1",
     "minimatch": "^7.4.3",
+    "openai": "^3.2.1",
     "ora": "^6.2.0",
+    "shortid": "^2.2.16",
     "ts-md5": "^1.3.1"
   },
   "devDependencies": {

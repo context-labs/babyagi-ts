@@ -2,59 +2,20 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 import fs from 'node:fs';
 import path from 'node:path';
-import { AutodocRepoConfig, LLMModels } from '../../../types.js';
+import { BabyAGIConfig, LLMModels } from '../../../types.js';
 
-export const makeConfigTemplate = (
-  config?: AutodocRepoConfig,
-): AutodocRepoConfig => {
+export const makeConfigTemplate = (config?: BabyAGIConfig): BabyAGIConfig => {
   return {
     name: config?.name ?? '',
-    repositoryUrl: config?.repositoryUrl ?? '',
-    root: '.',
-    output: './.autodoc',
-    llms:
-      config?.llms?.length ?? 0 > 0
-        ? (config as AutodocRepoConfig).llms
-        : [LLMModels.GPT3],
-    ignore: [
-      '.*',
-      '*package-lock.json',
-      '*package.json',
-      'node_modules',
-      '*dist*',
-      '*build*',
-      '*test*',
-      '*.svg',
-      '*.md',
-      '*.mdx',
-      '*.toml',
-      '*autodoc*',
-    ],
-    filePrompt:
-      'Write a detailed technical explanation of what this code does. \n\
-      Focus on the high-level purpose of the code and how it may be used in the larger project.\n\
-      Include code examples where appropriate. Keep you response between 100 and 300 words. \n\
-      DO NOT RETURN MORE THAN 300 WORDS.\n\
-      Output should be in markdown format.\n\
-      Do not just list the methods and classes in this file.',
-    folderPrompt:
-      'Write a technical explanation of what the code in this folder does\n\
-      and how it might fit into the larger project or work with other parts of the project.\n\
-      Give examples of how this code might be used. Include code examples where appropriate.\n\
-      Be concise. Include any information that may be relevant to a developer who is curious about this code.\n\
-      Keep you response under 400 words. Output should be in markdown format.\n\
-      Do not just list the files and folders in this folder.',
-    chatPrompt: '',
-    contentType: 'code',
-    targetAudience: 'smart developer',
-    linkHosted: false,
+    objective: '',
+    initialTask: '',
+    llm: LLMModels.GPT4,
+    root: './',
   };
 };
 
-export const init = async (
-  config: AutodocRepoConfig = makeConfigTemplate(),
-) => {
-  const configPath = path.join(config.root, 'autodoc.config.json');
+export const init = async (config: BabyAGIConfig = makeConfigTemplate()) => {
+  const configPath = path.join(config.root, 'babyagi.config.json');
 
   if (fs.existsSync(configPath)) {
     const questions = [
@@ -62,7 +23,7 @@ export const init = async (
         type: 'confirm',
         name: 'continue',
         message:
-          'An autodoc.config.json file already exists in this location. The existing configuration will be overwritten. Do you want to continue? ',
+          'An babyagi.config.json file already exists in this location. The existing configuration will be overwritten. Do you want to continue? ',
         default: false,
       },
     ];
@@ -77,55 +38,68 @@ export const init = async (
     {
       type: 'input',
       name: 'name',
-      message: chalk.yellow(`Enter the name of your repository:`),
+      message: chalk.yellow(`Enter the name of your agent:`),
       default: config.name,
     },
     {
       type: 'input',
-      name: 'repositoryUrl',
-      message: chalk.yellow(`Enter the GitHub URL of your repository:`),
-      default: config.repositoryUrl,
+      name: 'objective',
+      message: chalk.yellow(`Enter your agent's objective:`),
+      default: config.objective,
+    },
+    {
+      type: 'input',
+      name: 'initialTask',
+      message: chalk.yellow(
+        `Enter the initial task for the agent to complete the objective:`,
+      ),
+      default: config.initialTask,
     },
     {
       type: 'list',
-      name: 'llms',
+      name: 'llm',
       message: chalk.yellow(
-        `Select which LLMs you have access to (use GPT-3.5 Turbo if you aren't sure):`,
+        `Select which LLM you would like to use (select GPT-3.5 Turbo if you aren't sure):`,
       ),
       default: 0,
       choices: [
         {
           name: 'GPT-3.5 Turbo',
-          value: [LLMModels.GPT3],
+          value: LLMModels.GPT3,
         },
         {
-          name: 'GPT-3.5 Turbo, GPT-4 8K (Early Access)',
-          value: [LLMModels.GPT3, LLMModels.GPT4],
+          name: 'GPT-4 8K (Early Access)',
+          value: LLMModels.GPT4,
         },
         {
-          name: 'GPT-3.5 Turbo, GPT-4 8K (Early Access), GPT-4 32K (Early Access)',
-          value: [LLMModels.GPT3, LLMModels.GPT4, LLMModels.GPT432k],
+          name: 'GPT-4 32K (Early Access)',
+          value: LLMModels.GPT432k,
         },
       ],
     },
   ];
 
-  const { name, repositoryUrl, llms } = await inquirer.prompt(questions);
+  const { name, objective, initialTask, llm } = await inquirer.prompt(
+    questions,
+  );
 
   const newConfig = makeConfigTemplate({
     ...config,
     name,
-    repositoryUrl,
-    llms,
+    objective,
+    initialTask,
+    llm,
   });
 
+  console.log(newConfig);
+
   fs.writeFileSync(
-    path.join(newConfig.root, 'autodoc.config.json'),
+    path.join(newConfig.root, 'babyagi.config.json'),
     JSON.stringify(newConfig, null, 2),
     'utf-8',
   );
 
   console.log(
-    chalk.green('Autodoc initialized. Run `doc index` to get started.'),
+    chalk.green('BabyAGI initialized. Run `babyagi start` to start the agent.'),
   );
 };

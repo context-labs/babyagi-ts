@@ -84,10 +84,6 @@ export class HNSWLib extends SaveableVectorStore {
     }
     await this.initIndex(vectors);
 
-    // TODO here we could optionally normalise the vectors to unit length
-    // so that dot product is equivalent to cosine similarity, like this
-    // https://github.com/nmslib/hnswlib/issues/384#issuecomment-1155737730
-    // While we only support OpenAI embeddings this isn't necessary
     if (vectors.length !== documents.length) {
       throw new Error(`Vectors and metadatas must have the same length`);
     }

@@ -4,28 +4,22 @@ import fs from 'node:fs/promises';
 import { Command } from 'commander';
 import { spinnerError, stopSpinner } from './cli/spinner.js';
 import { init } from './cli/commands/init/index.js';
-import { estimate } from './cli/commands/estimate/index.js';
-import { index } from './cli/commands/index/index.js';
-import { query } from './cli/commands/query/index.js';
-import { AutodocRepoConfig, AutodocUserConfig } from './types.js';
-import inquirer from 'inquirer';
-import chalk from 'chalk';
-import { user } from './cli/commands/user/index.js';
-import { userConfigFilePath } from './const.js';
+import { start } from './cli/commands/start/index.js';
+import { BabyAGIConfig } from './types.js';
 
 const program = new Command();
-program.description('Autodoc CLI Tool');
-program.version('0.0.9');
+program.description('BabyAGI CLI Tool');
+program.version('0.0.1');
 
 program
   .command('init')
   .description(
-    'Initialize repository by creating a `autodoc.config.json` file in the current directory.',
+    'Initialize project by creating a `babyagi.config.json` file in the current directory.',
   )
   .action(async () => {
     try {
-      const config: AutodocRepoConfig = JSON.parse(
-        await fs.readFile('./autodoc.config.json', 'utf8'),
+      const config: BabyAGIConfig = JSON.parse(
+        await fs.readFile('./babyagi.config.json', 'utf8'),
       );
       init(config);
     } catch (e) {
@@ -34,113 +28,21 @@ program
   });
 
 program
-  .command('estimate')
-  .description('Estimate the cost of running `index` on your respository.')
+  .command('start')
+  .description('Start a BabyAGI Agent')
   .action(async () => {
+    let config: BabyAGIConfig;
     try {
-      const config: AutodocRepoConfig = JSON.parse(
-        await fs.readFile('./autodoc.config.json', 'utf8'),
-      );
-      estimate(config);
+      config = JSON.parse(await fs.readFile('./babyagi.config.json', 'utf8'));
     } catch (e) {
       console.error(
-        'Failed to find `autodoc.config.json` file. Did you run `doc init`?',
-      );
-      console.error(e);
-      process.exit(1);
-    }
-  });
-
-program
-  .command('index')
-  .description(
-    'Traverse your codebase, write docs via LLM, and create a locally stored index.',
-  )
-  .action(async () => {
-    try {
-      const config: AutodocRepoConfig = JSON.parse(
-        await fs.readFile('./autodoc.config.json', 'utf8'),
-      );
-
-      await estimate(config);
-
-      const questions = [
-        {
-          type: 'confirm',
-          name: 'continue',
-          message: 'Do you want to continue with indexing?',
-          default: true,
-        },
-      ];
-
-      const answers = await inquirer.prompt(questions);
-
-      if (answers.continue) {
-        console.log(chalk.green('Starting crawl...'));
-        index(config);
-      } else {
-        console.log('Exiting...');
-        process.exit(0);
-      }
-    } catch (e) {
-      console.error(
-        'Failed to find `autodoc.config.json` file. Did you run `doc init`?',
-      );
-      console.error(e);
-      process.exit(1);
-    }
-  });
-
-program
-  .command('user')
-  .description('Set the Autodoc user config')
-  .action(async () => {
-    try {
-      const config: AutodocUserConfig = JSON.parse(
-        await fs.readFile(userConfigFilePath, 'utf8'),
-      );
-      user(config);
-    } catch (e) {
-      user();
-    }
-  });
-
-program
-  .command('q')
-  .description('Query an Autodoc index')
-  .action(async () => {
-    let repoConfig: AutodocRepoConfig;
-    try {
-      repoConfig = JSON.parse(
-        await fs.readFile('./autodoc.config.json', 'utf8'),
-      );
-    } catch (e) {
-      console.error(
-        'Failed to find `autodoc.config.json` file. Did you run `doc init`?',
+        'Failed to find `babyagi.config.json` file. Did you run `babyagi init`?',
       );
       console.error(e);
       process.exit(1);
     }
 
-    try {
-      const userConfig: AutodocUserConfig = JSON.parse(
-        await fs.readFile(userConfigFilePath, 'utf8'),
-      );
-
-      query(repoConfig, userConfig);
-    } catch (e) {
-      try {
-        await user();
-        const userConfig: AutodocRepoConfig = JSON.parse(
-          await fs.readFile(userConfigFilePath, 'utf8'),
-        );
-        query(repoConfig, userConfig);
-      } catch (e) {
-        console.error('Failed to config file. Did you run `doc init`?');
-        console.error(e);
-        process.exit(1);
-      }
-    }
+    start(config);
   });
 
 /**
