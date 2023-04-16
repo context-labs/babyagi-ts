@@ -4,8 +4,9 @@ import * as LLMUtil from '../../utils/LLMUtil.js';
 import { BabyAGIConfig } from '../../../types.js';
 import { OpenAIEmbeddings } from 'langchain/embeddings';
 import { HNSWLib } from '../../../langchain/hnswlib.js';
+import chalk from 'chalk';
 
-export const start = async ({
+export const run = async ({
   objective,
   initialTask,
   llm,
@@ -17,7 +18,6 @@ export const start = async ({
   );
   const vectorStore = await (async () => {
     if (vectorStoreExists) {
-      console.log('ETIG VECTO');
       return await HNSWLib.load(vectorStorePath, new OpenAIEmbeddings());
     }
 
@@ -25,7 +25,7 @@ export const start = async ({
       [{ pageContent: 'text', metadata: { test: true } }],
       new OpenAIEmbeddings(),
     );
-    console.log('NEW VECTO');
+
     await store.save(vectorStorePath);
     return store;
   })();
@@ -40,6 +40,11 @@ export const start = async ({
   let taskList: Task[] = [
     { taskId: 1, taskName: initialTask }, // Add the first task
   ];
+
+  console.log(chalk.bold(chalk.magenta('\n*****OBJECTIVE*****\n')));
+  console.log(objective);
+  console.log(`${chalk.bold(chalk.magenta('\nInitial Task:'))} ${initialTask}`);
+
   async function taskCreationAgent(
     objective: string,
     result: { data: string },
@@ -88,7 +93,6 @@ export const start = async ({
       : [response];
     taskList = [];
     for (const task_string of newTasks) {
-      console.log(task_string);
       const [id, name] = task_string.trim().split('.', 2);
       const taskId = parseInt(id.trim());
       const taskName = name.trim();
@@ -129,18 +133,14 @@ export const start = async ({
       topResultsNum,
     );
 
-    console.log(JSON.stringify(results, null, 2));
-
-    // const sorted_results = results.matches.sort((a, b) => b.score - a.score);
-    return results.map(([doc]) => doc.metadata.task);
+    const sorted = results.sort(([, a], [, b]) => b - a);
+    return sorted.map(([doc]) => doc.metadata.task);
   }
 
   while (true) {
-    console.log('LOOPING...');
-    console.log(`Task list length: ${taskList.length}`);
     if (taskList.length > 0) {
       // Print the task list
-      console.log('*****TASK LIST*****');
+      console.log(chalk.bold(chalk.magenta('\n*****TASK LIST*****\n')));
       for (const t of taskList) {
         console.log(`${t.taskId}: ${t.taskName}`);
       }
@@ -151,30 +151,26 @@ export const start = async ({
         throw new Error('Task is undefined');
       }
 
-      console.log('*****NEXT TASK*****');
+      console.log(chalk.bold(chalk.greenBright('\n*****NEXT TASK*****\n')));
       console.log(`${task.taskId}: ${task.taskName}`);
 
       // Send to execution function to complete the task based on the context
       const result = await executionAgent(objective, task.taskName);
       const thisTaskId = task.taskId;
-      console.log('*****TASK RESULT*****');
+      console.log(chalk.bold(chalk.magenta('\n*****TASK RESULT*****\n')));
       console.log(result);
 
-      // Step 2: Enrich result and store in Pinecone
+      // Step 2: Enrich result and store in Vector Store
       const enriched_result = { data: result };
       const result_id = `result_${task.taskId}`;
-      console.log({
-        pageContent: enriched_result.data,
-        metadata: { result_id, task: task.taskName, result },
-      });
       await vectorStore.addDocuments([
         {
           pageContent: enriched_result.data,
           metadata: { result_id, task: task.taskName, result },
         },
       ]);
+      await vectorStore.save(vectorStorePath);
 
-      console.log('*****Creating New Tasks*****');
       // Step 3: Create new tasks and reprioritize task list
       const newTasks = await taskCreationAgent(
         objective,
@@ -183,7 +179,6 @@ export const start = async ({
         taskList.map((t) => t.taskName),
       );
 
-      console.log('*****New Tasks*****');
       for (const newTask of newTasks) {
         taskList.push(newTask);
       }
@@ -195,5 +190,5 @@ export const start = async ({
 };
 
 export default {
-  start,
+  run,
 };

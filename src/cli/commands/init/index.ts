@@ -7,9 +7,9 @@ import { BabyAGIConfig, LLMModels } from '../../../types.js';
 export const makeConfigTemplate = (config?: BabyAGIConfig): BabyAGIConfig => {
   return {
     name: config?.name ?? '',
-    objective: '',
-    initialTask: '',
-    llm: LLMModels.GPT4,
+    objective: config?.objective ?? '',
+    initialTask: config?.initialTask ?? '',
+    llm: config?.llm ?? LLMModels.GPT4,
     root: './',
   };
 };
@@ -90,8 +90,6 @@ export const init = async (config: BabyAGIConfig = makeConfigTemplate()) => {
     initialTask,
     llm,
   });
-
-  console.log(newConfig);
 
   fs.writeFileSync(
     path.join(newConfig.root, 'babyagi.config.json'),

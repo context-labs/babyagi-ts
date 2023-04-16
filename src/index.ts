@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import { Command } from 'commander';
 import { spinnerError, stopSpinner } from './cli/spinner.js';
 import { init } from './cli/commands/init/index.js';
-import { start } from './cli/commands/start/index.js';
+import { run } from './cli/commands/run/index.js';
 import { BabyAGIConfig } from './types.js';
 
 const program = new Command();
@@ -28,21 +28,18 @@ program
   });
 
 program
-  .command('start')
-  .description('Start a BabyAGI Agent')
+  .command('run')
+  .description('Run a BabyAGI Agent')
   .action(async () => {
     let config: BabyAGIConfig;
     try {
       config = JSON.parse(await fs.readFile('./babyagi.config.json', 'utf8'));
     } catch (e) {
-      console.error(
-        'Failed to find `babyagi.config.json` file. Did you run `babyagi init`?',
-      );
-      console.error(e);
-      process.exit(1);
+      await init();
+      config = JSON.parse(await fs.readFile('./babyagi.config.json', 'utf8'));
     }
 
-    start(config);
+    run(config);
   });
 
 /**
