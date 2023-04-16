@@ -1,0 +1,51 @@
+[View code on GitHub](https://github.com/context-labs/babyagi-ts/src/cli/utils/WaitUtil.ts)
+
+The code in this file provides two utility functions, `wait` and `forTrue`, which are designed to help manage asynchronous operations in the larger babyagi-ts project. Both functions return Promises, making them suitable for use with `async/await` syntax.
+
+### wait function
+
+The `wait` function takes two arguments: `timeoutMs`, which is the number of milliseconds to wait before resolving the Promise, and an optional `value` parameter, which defaults to `null`. The purpose of this function is to create a delay in the execution of asynchronous code. This can be useful in scenarios where you need to wait for a specific amount of time before proceeding with the next operation.
+
+Example usage:
+
+```javascript
+async function example() {
+  console.log("Starting...");
+  await wait(1000); // Wait for 1 second
+  console.log("...Finished");
+}
+```
+
+### forTrue function
+
+The `forTrue` function takes a single argument, `fn`, which is a function that returns a boolean value. The purpose of this function is to repeatedly check the result of the `fn` function until it returns `true` or a maximum number of attempts (200 in this case) is reached. The function checks the result of `fn` every 50 milliseconds. If `fn` returns `true`, the Promise resolves with the value `true`. If the maximum number of attempts is reached without `fn` returning `true`, the Promise is rejected.
+
+This function can be useful in scenarios where you need to wait for a specific condition to be met before proceeding with the next operation, such as waiting for an element to be visible on a web page or for a specific value to be present in a data store.
+
+Example usage:
+
+```javascript
+async function waitForElement() {
+  const elementExists = () => document.querySelector("#my-element") !== null;
+  try {
+    await forTrue(elementExists);
+    console.log("Element found!");
+  } catch {
+    console.log("Element not found after waiting");
+  }
+}
+```
+
+In summary, this file provides two utility functions that help manage asynchronous operations in the babyagi-ts project by introducing delays and waiting for specific conditions to be met.
+## Questions: 
+ 1. **What is the purpose of the `wait` function?**
+
+   The `wait` function is an asynchronous utility function that resolves a promise after a specified timeout in milliseconds, optionally returning a value when the promise resolves.
+
+2. **How does the `forTrue` function work and what is its use case?**
+
+   The `forTrue` function takes a function `fn` as an argument, which should return a boolean value. It repeatedly checks the result of `fn` every 50 milliseconds, and resolves a promise when `fn` returns `true`. It can be used to wait for a certain condition to become true before proceeding with the execution of the code.
+
+3. **Is there a limit to the number of times the `forTrue` function checks the result of `fn`?**
+
+   Yes, the `forTrue` function checks the result of `fn` up to 200 times. If `fn` does not return `true` within these 200 checks, the promise is rejected.
