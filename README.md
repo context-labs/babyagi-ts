@@ -42,6 +42,23 @@ This will begin the agent creation flow. You should see a screen like this:
 
 After you finish the agent configuration your agent will start running.
 
+### Multiple Agents
+
+If you'd like to create a new agent with a different objective, create a new folder and go through the the steps again:
+
+```bash
+mkdir research-gpt
+```
+
+Move into the directory:
+```bash
+cd research-gpt
+```
+
+Create a new agent:
+```bash
+babyagi run
+```
 
 # Warning
 This script is designed to be run continuously as part of a task management system. Running this script continuously can result in high API usage, so please use it responsibly. Additionally, the script requires the OpenAI API to be set up correctly, so make sure you have set up the API before running the script.
