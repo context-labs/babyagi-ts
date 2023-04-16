@@ -1,6 +1,6 @@
 {
   "name": "babyagi",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "babyagi",
   "type": "module",
   "main": "./dist/index.js",

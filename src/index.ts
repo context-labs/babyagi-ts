@@ -9,7 +9,7 @@ import { BabyAGIConfig } from './types.js';
 
 const program = new Command();
 program.description('BabyAGI CLI Tool');
-program.version('0.0.1');
+program.version('0.0.2');
 
 program
   .command('init')
